@@ -4,6 +4,8 @@ from tkinter import messagebox
 from tkinter import filedialog
 from pathlib import Path
 import time, os, sys, shutil
+from PIL import Image, ImageTk, ImageGrab
+#from Image import ImageTk
 
 raam=Tk()
 raam.title("Projekt")
@@ -14,7 +16,7 @@ paksus=IntVar()
 paksus.set(2)
 värv=StringVar()
 värv.set("red")
-
+pilt=0
 #Teksti omadused
 sisend=StringVar()
 #Siia tuleb veel font
@@ -69,9 +71,11 @@ def init_GUI():
     tekst_e = ttk.Entry(toolbar, textvariable=sisend)
     tekst_e.grid(column=5, row=0, padx=5, pady=5, sticky=(E,N,S,W))
     #Vali pilt mida kuvada
-    pilt_b = ttk.Button(toolbar, text="Ava pilt", command=pilt)
-    pilt_b.grid(column=6, row=0, padx=5, pady=5, sticky=(E,N,S,W))
-    
+    ava_pilt_b = ttk.Button(toolbar, text="Ava pilt", command=ava_pilt)
+    ava_pilt_b.grid(column=6, row=0, padx=5, pady=5, sticky=(E,N,S,W))
+    #Pildi salvestamine
+    salvesta_pilt_b = ttk.Button(toolbar, text="Salvesta pilt", command=salvesta_pilt)
+    salvesta_pilt_b.grid(column=7, row=0, padx=5, pady=5, sticky=(E,N,S,W))
 #Kui on vaja et klahv nupp midagi ei teeks
 def ignore(event):
     return 0
@@ -99,20 +103,33 @@ def pintsel(event):
 def tekst(event):
     global paksus, värv, hiir_x, hiir_y, sisend
     tahvel.create_text(hiir_x,hiir_y,fill=värv.get(),text=sisend.get(),anchor=SW)
-#Pilt
-def pilt():
-    dir=filedialog.askopenfilenames(filetypes=(("Image files", "*.gif;*.pgm;*.ppm"),("All files", "*.*") ))
+#Pildi avamine
+def ava_pilt():
+    global pilt
+    dir=filedialog.askopenfilenames(filetypes=[("Image files", "*.gif;*.pgm;*.ppm;*.PNG;*.jpg"),("All files", "*.*")])
+    if dir is None: return
     dir=str(dir)[2:len(str(dir))-3]
     img_dir=dir
     while img_dir.find("/")!=-1:
         img_dir=img_dir[img_dir.find("/")+1:len(img_dir)]
     if not Path(img_dir).is_file(): shutil.copy(dir, sys.path[0])
-    print(img_dir)
-    pilt = PhotoImage(file=img_dir)
-    a=Label(image=pilt)
-    a.image = pilt
-    tahvel.create_image(100, 100, image=pilt, anchor=NW)
-
-
+    pilt = Image.open(img_dir)
+    img = ImageTk.PhotoImage(pilt)
+    a=Label(image=img)
+    a.image = img
+    tahvel.create_image(100, 100, image=img, anchor=NW)
+#Pildi salvestamine
+def salvesta_pilt():
+    x=raam.winfo_x()+tahvel.winfo_x()
+    y=raam.winfo_y()+tahvel.winfo_y()
+    x1=x+tahvel.winfo_width()
+    y1=y+tahvel.winfo_height()
+    dir=filedialog.asksaveasfile(defaultextension=".gif", filetypes=[("GIF image", "*.gif"), ("PNG image","*.png"), ("JPG image", "*.jpg")])
+    dir=dir.name
+    print(dir)
+    if dir is None: return
+    ImageGrab.grab().crop((x,y,x1,y1)).save(dir)
+    #img.save(dir)
+    
 init_GUI()
 raam.mainloop()
