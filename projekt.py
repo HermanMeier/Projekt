@@ -18,7 +18,10 @@ paksus.set(2)
 värv=StringVar()
 värv.set("#000000")
 kujundi_piir=StringVar()
-värvi_indikaator=0
+
+#Faili tee
+faili_info = StringVar()
+faili_info.set("")
 
 #PIL image ja sellele joonistamine
 pilt=Image.new("P", (500,500), color=255)
@@ -47,6 +50,7 @@ def init_GUI():
     tahvel.grid(column=0, row=1, padx=5, pady=5, sticky=(E,N,S,W))
     tahvel.bind("<B1-Motion>", pliiats)
     tahvel.bind("<Motion>", hiire_positsioon)
+    tahvli_aken.resizable(0,0)
     #tahvel.bind_all("<MouseWheel>", zoom_window)
     
     #Kõikide nuppude raam
@@ -124,13 +128,17 @@ def init_GUI():
 
     #Hiire positsioon
     hiire_info_l = ttk.Label(infobar, textvariable=hiire_info)
-    hiire_info_l.grid(column=0, row=0, padx=5, pady=5, sticky=(N,S,W))
+    hiire_info_l.grid(column=0, row=0, padx=5, pady=5, sticky=(N,S,W,E))
 
     #Värv
     global värvi_info
     värvi_info = Canvas(infobar, width=100, height=infobar.winfo_height(), background=värv.get())
-    värvi_info.grid(column=1, row=0, padx=5, pady=5, sticky=(N,S,W))
+    värvi_info.grid(column=1, row=0, padx=5, pady=5, sticky=(N,S))
     värvi_indikaator = värvi_info.create_rectangle(0,0,värvi_info.winfo_width(),värvi_info.winfo_height(), fill=värv.get())
+
+    #Fail
+    faili_info_l = ttk.Label(infobar, textvariable=faili_info)
+    faili_info_l.grid(column=2, row=0, padx=5, pady=5, sticky=(N,S))
     
 #Kui on vaja et klahv nupp midagi ei teeks
 def ignore(event):
@@ -233,11 +241,12 @@ def tekst(event):
     kuva_pilt(pilt)
 #Pildi avamine
 def ava_pilt():
-    global pilt, joonista
+    global pilt, joonista, faili_info
     dir=filedialog.askopenfilenames(filetypes=[("Image files", "*.gif;*.pgm;*.ppm;*.PNG;*.jpg"),("All files", "*.*")])
     if dir is None: return
     dir=str(dir)[2:len(str(dir))-3]
     img_dir=dir
+    faili_info.set(img_dir)
     while img_dir.find("/")!=-1:
         img_dir=img_dir[img_dir.find("/")+1:len(img_dir)]
     if not Path(img_dir).is_file(): shutil.copy(dir, sys.path[0])
@@ -249,7 +258,7 @@ def ava_pilt():
     kuva_pilt(pilt)
 #Teeb PIL image TK photoimage-ks ja kuvab selle tahvlile
 def kuva_pilt(p):
-    img = ImageTk.PhotoImage(p)
+    img = ImageTk.PhotoImage(p, p.size)
     a=Label(image=img)
     a.image = img
     tahvel.create_image(tahvel.winfo_width()/2-img.width()/2, tahvel.winfo_height()/2-img.height()/2, image=img, anchor=NW)
